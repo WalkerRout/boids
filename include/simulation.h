@@ -1,0 +1,32 @@
+#ifndef SIMULATION_H
+#define SIMULATION_H
+
+#include "boid.h"
+
+#define HOOD_RADIUS 60.0
+#define MAX_SPEED 100.0
+#define MAX_FORCE 50.0
+
+/// A boids flocking simulation (rules for separation, alignment, cohesion)
+typedef struct simulation {
+  size_t ticks;
+
+  // dimensions for simulation
+  float width, height;
+
+  // fixed size list of boids
+  size_t boids_len;
+  boid_t *boids;
+  boid_t *boids_swap;
+} simulation_t;
+
+/// Initialize a simulation with n randomly spawned boids
+void simulation_init(simulation_t *sim, float width, float height, size_t boids_len);
+
+/// Free a simulations memory
+void simulation_free(simulation_t *sim);
+
+/// Update a simulation by a single tick
+void simulation_tick(simulation_t *sim, float delta_time);
+
+#endif // SIMULATION_H
