@@ -125,7 +125,7 @@ static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_l
     float dist = boid_sqr_distance(boid, other);
     if (dist < (HOOD_RADIUS*HOOD_RADIUS)) {
       // separation
-      if (dist < (HOOD_RADIUS*HOOD_RADIUS)/2.0) {
+      if (dist < (HOOD_RADIUS*HOOD_RADIUS)/3.0) {
         v2f_t diff = v2f_sub(boid.position, other.position);
         float mag_diff = v2f_len(diff);
         v2f_t norm_diff = safe_v2f_div(diff, v2ff(mag_diff));

@@ -11,7 +11,7 @@
 #include "boid.h"
 #include "simulation.h"
 
-#define WIDTH 1400.0
+#define WIDTH 1600.0
 #define HEIGHT 1000.0
 
 #define BOID_WIDTH 8.0
@@ -21,7 +21,6 @@
 
 /// Draw a singular boid at its given position, facing in the direction of 
 /// its normalized velocity
-
 void draw_boid(boid_t boid) {
   float vlen = v2f_len(boid.velocity);
   if (vlen == 0.0f) {
@@ -61,13 +60,10 @@ void draw_boid(boid_t boid) {
 }
 
 /// Draw an entire simulation (all the boids..)
-void draw_simulation(simulation_t *sim) {
-  BeginDrawing();
-    ClearBackground(BLACK);
-    for (size_t i = 0; i < sim->boids_len; ++i) {
-      draw_boid(sim->boids[i]);
-    }
-  EndDrawing();
+void draw_simulation(simulation_t *sim) {  
+  for (size_t i = 0; i < sim->boids_len; ++i) {
+    draw_boid(sim->boids[i]);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -81,7 +77,7 @@ int main(int argc, char *argv[]) {
   SetTargetFPS(120);
 
   // create simulation
-  const size_t boid_count = 500;
+  const size_t boid_count = 1500;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
 
@@ -93,8 +89,15 @@ int main(int argc, char *argv[]) {
       simulation_free(&sim);
       simulation_init(&sim, WIDTH, HEIGHT, boid_count);
     }
+
+    // advance the simulation
     simulation_tick(&sim, (float) dt);
-    draw_simulation(&sim);
+
+    // draw the simulation
+    BeginDrawing();
+      ClearBackground(BLACK);
+      draw_simulation(&sim);
+    EndDrawing();
   }
 
   // close window

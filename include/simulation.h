@@ -4,7 +4,7 @@
 #include "boid.h"
 
 #define HOOD_RADIUS 60.0
-#define MAX_SPEED 100.0
+#define MAX_SPEED 200.0
 #define MAX_FORCE 50.0
 
 /// A boids flocking simulation (rules for separation, alignment, cohesion)
