@@ -11,50 +11,64 @@
 #include "boid.h"
 #include "simulation.h"
 
-#define WIDTH 1600.0
-#define HEIGHT 1000.0
+#define WIDTH 1600.0f
+#define HEIGHT 1000.0f
 
-#define BOID_WIDTH 8.0
-#define BOID_HEIGHT 16.0
-#define BOID_STILL_RADIUS 10.0 // when boid has no velocity, draw as circle
+#define BOID_WIDTH 8.0f
+#define BOID_HEIGHT 16.0f
+#define BOID_STILL_RADIUS 10.0f // when boid has no velocity, draw as circle
 #define BOID_COLOUR RED
 
 /// Draw a singular boid at its given position, facing in the direction of 
 /// its normalized velocity
 void draw_boid(boid_t boid) {
   float vlen = v2f_len(boid.velocity);
-  if (vlen == 0.0f) {
-    DrawCircle(boid.position.x, boid.position.y, BOID_STILL_RADIUS, BOID_COLOUR);
+  if (vlen == 0.0) {
+    DrawCircle(
+      boid.position.x, boid.position.y, 
+      BOID_STILL_RADIUS, 
+      BOID_COLOUR
+    );
     return;
   }
 
-  // determine directionality
-  v2f_t dir = v2f_div(boid.velocity, v2ff(vlen));
-  v2f_t perp = v2f(-dir.y, dir.x);
+  // given a triangle facing upwards:
+  //
+  //          A
+  //         /^\
+  //        / | \
+  //       /  H  \
+  //      /   |   \
+  //     /    v    \
+  //    B<----W---->C
+  //
+  // where point A is the top, point B is the left, and point C is the right,
+  // we have height H and width W.
+  //
+  // we want to find the positions for A, B, and C given the current position
+  // and **direction**.
+  //
+  // suppose the position for a bird is directly in the centre of it's body,
+  // we can then find all positions by moving forward/backward and left/right
 
-  // construct triangle in space
-  v2f_t front = v2f(BOID_HEIGHT/2.0, 0.0); // front
-  v2f_t left = v2f(-BOID_HEIGHT/2.0, -BOID_WIDTH/2.0); // left base
-  v2f_t right = v2f(-BOID_HEIGHT/2.0, BOID_WIDTH/2.0); // right base
-
-  // rotate/translate/scale triangle in space
-  v2f_t pa = v2f_add(
-    boid.position,
-    v2f_add(v2f_mul(dir, v2ff(front.x)), v2f_mul(perp, v2ff(front.y)))
-  );
-  v2f_t pb = v2f_add(
-    boid.position,
-    v2f_add(v2f_mul(dir, v2ff(left.x)), v2f_mul(perp, v2ff(left.y)))
-  );
-  v2f_t pc = v2f_add(
-    boid.position,
-    v2f_add(v2f_mul(dir, v2ff(right.x)), v2f_mul(perp, v2ff(right.y)))
-  );
+  // direction the boid is facing
+  v2f_t direction = v2f_div(boid.velocity, v2ff(vlen));
+  // isoceles formula direction
+  v2f_t forward = v2f_mul(direction, v2ff((2.0f/3.0f)*BOID_HEIGHT));
+  v2f_t backward = v2f_mul(direction, v2ff((-1.0f/3.0f)*BOID_HEIGHT));
+  // perpendicular offsets
+  v2f_t tangent_direction = v2f(-direction.y, direction.x);
+  v2f_t offset = v2f_mul(tangent_direction, v2ff(BOID_WIDTH/2.0f));
+  
+  // final vertices
+  v2f_t tip = v2f_add(boid.position, forward);
+  v2f_t left = v2f_sub(v2f_add(boid.position, backward), offset);
+  v2f_t right = v2f_add(v2f_add(boid.position, backward), offset);
 
   DrawTriangle(
-    (Vector2){ pa.x, pa.y },
-    (Vector2){ pb.x, pb.y },
-    (Vector2){ pc.x, pc.y },
+    (Vector2){ tip.x, tip.y },
+    (Vector2){ left.x, left.y },
+    (Vector2){ right.x, right.y },
     BOID_COLOUR
   );
 }
@@ -73,7 +87,7 @@ int main(int argc, char *argv[]) {
   srand(time(NULL));
 
   // create window
-  InitWindow(WIDTH, HEIGHT, "boids");
+  InitWindow((int) WIDTH, (int) HEIGHT, "boids");
   SetTargetFPS(120);
 
   // create simulation
@@ -89,10 +103,8 @@ int main(int argc, char *argv[]) {
       simulation_free(&sim);
       simulation_init(&sim, WIDTH, HEIGHT, boid_count);
     }
-
     // advance the simulation
     simulation_tick(&sim, (float) dt);
-
     // draw the simulation
     BeginDrawing();
       ClearBackground(BLACK);

@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
 project(boids C)
 
-set(CMAKE_C_FLAGS "-O3 -Wall -Wextra -Wpedantic -Werror ${CMAKE_C_FLAGS}")
+if(CMAKE_COMPILER_IS_GNUCXX)
+  message(STATUS "gcc detected, adding specific flags")
+  set(CMAKE_C_FLAGS "-Wall -Wextra -Wpedantic -Werror ${CMAKE_C_FLAGS}")
+else()
+  message(STATUS "Detected non-gcc compiler, omitting some flags")
+  set(CMAKE_C_FLAGS "-Wall ${CMAKE_C_FLAGS}")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
 find_package(raylib REQUIRED)
 

@@ -157,13 +157,13 @@ typedef struct v4d {
 ** Generates a random float between 0 and 1
 ** @returns: A random float between 0 and 1
 */
-MVLADEF float randf();
+MVLADEF float randf(void);
 
 /*
 ** Generates a random double between 0 and 1
 ** @returns: A random double between 0 and 1
 */
-MVLADEF double randd();
+MVLADEF double randd(void);
 
 /*
 ** Linearly interpolates between two floats
@@ -1512,13 +1512,13 @@ MVLADEF void v4d_print(v4d_t a);
 
 // -----------------------------------------
 
-MVLAIMPL float randf() {
+MVLAIMPL float randf(void) {
   // assume we have seeded srand first to use rand
   return ((float) rand()) /
          ((float) RAND_MAX);
 }
 
-MVLAIMPL double randd() {
+MVLAIMPL double randd(void) {
   return ((double) rand()) /
          ((double) RAND_MAX);
 }
@@ -2377,18 +2377,18 @@ MVLAIMPL v4f_t v4f_div(v4f_t a, v4f_t b) {
 }
 
 MVLAIMPL v4f_t v4f_min(v4f_t a, v4f_t b) {
-  a.x = fmin(a.x, b.x);
-  a.y = fmin(a.y, b.y);
-  a.z = fmin(a.z, b.z);
-  a.w = fmin(a.w, b.w);
+  a.x = fminf(a.x, b.x);
+  a.y = fminf(a.y, b.y);
+  a.z = fminf(a.z, b.z);
+  a.w = fminf(a.w, b.w);
   return a;
 }
 
 MVLAIMPL v4f_t v4f_max(v4f_t a, v4f_t b) {
-  a.x = fmax(a.x, b.x);
-  a.y = fmax(a.y, b.y);
-  a.z = fmax(a.z, b.z);
-  a.w = fmax(a.w, b.w);
+  a.x = fmaxf(a.x, b.x);
+  a.y = fmaxf(a.y, b.y);
+  a.z = fmaxf(a.z, b.z);
+  a.w = fmaxf(a.w, b.w);
   return a;
 }
 

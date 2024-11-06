@@ -41,10 +41,10 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
   sim->boids_swap = calloc(boids_len, sizeof(boid_t));
 
   for (size_t i = 0; i < boids_len; ++i) {
-    sim->boids[i].position.x = width*randd();
-    sim->boids[i].position.y = height*randd();
-    sim->boids[i].velocity.x = MAX_SPEED*randd();
-    sim->boids[i].velocity.y = MAX_SPEED*randd();
+    sim->boids[i].position.x = width*randf();
+    sim->boids[i].position.y = height*randf();
+    sim->boids[i].velocity.x = MAX_SPEED*randf();
+    sim->boids[i].velocity.y = MAX_SPEED*randf();
   }
 }
 
@@ -161,10 +161,13 @@ static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_l
 }
 
 static v2f_t calculate_acceleration(boid_update_t deltas) {
+  float separation_scale = 1.0;
+  float alignment_scale = 2.0;
+  float cohesion_scale = 5.0;
   // scale deltas (for customizing behaviour), default is a noop
-  v2f_t sep = v2f_mul(deltas.separation, v2ff(1.0));
-  v2f_t ali = v2f_mul(deltas.alignment, v2ff(1.0));
-  v2f_t coh = v2f_mul(deltas.cohesion, v2ff(1.0));
+  v2f_t sep = v2f_mul(deltas.separation, v2ff(separation_scale));
+  v2f_t ali = v2f_mul(deltas.alignment, v2ff(alignment_scale));
+  v2f_t coh = v2f_mul(deltas.cohesion, v2ff(cohesion_scale));
   return v2f_add(sep, v2f_add(ali, coh));
 }
 
