@@ -2,6 +2,7 @@
 #define SIMULATION_H
 
 #include "boid.h"
+#include "arena.h"
 
 #define HOOD_RADIUS 60.0f
 #define MAX_SPEED 200.0f
@@ -15,7 +16,8 @@ typedef struct simulation {
   float width, height;
 
   // fixed size list of boids
-  size_t boids_len;
+  arena_t boids_arena;
+  size_t  boids_len;
   boid_t *boids;
   boid_t *boids_swap;
 } simulation_t;

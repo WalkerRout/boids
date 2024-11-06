@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <time.h>
 
 #include <raylib.h>
@@ -10,6 +11,8 @@
 
 #include "boid.h"
 #include "simulation.h"
+
+#include "arena.h"
 
 #define WIDTH 1600.0f
 #define HEIGHT 1000.0f
@@ -32,24 +35,26 @@ void draw_boid(boid_t boid) {
     return;
   }
 
-  // given a triangle facing upwards:
-  //
-  //          A
-  //         /^\
-  //        / | \
-  //       /  H  \
-  //      /   |   \
-  //     /    v    \
-  //    B<----W---->C
-  //
-  // where point A is the top, point B is the left, and point C is the right,
-  // we have height H and width W.
-  //
-  // we want to find the positions for A, B, and C given the current position
-  // and **direction**.
-  //
-  // suppose the position for a bird is directly in the centre of it's body,
-  // we can then find all positions by moving forward/backward and left/right
+  /*
+  ** given a triangle facing upwards:
+  **
+  **          A
+  **         /^\
+  **        / | \
+  **       /  H  \
+  **      /   |   \
+  **     /    v    \
+  **    B<----W---->C
+  **
+  ** where point A is the top, point B is the left, and point C is the right,
+  ** we have height H and width W.
+  **
+  ** we want to find the positions for A, B, and C given the current position
+  ** and **direction**.
+  **
+  ** suppose the position for a bird is directly in the centre of it's body,
+  ** we can then find all positions by moving forward/backward and left/right
+  */
 
   // direction the boid is facing
   v2f_t direction = v2f_div(boid.velocity, v2ff(vlen));
@@ -74,7 +79,8 @@ void draw_boid(boid_t boid) {
 }
 
 /// Draw an entire simulation (all the boids..)
-void draw_simulation(simulation_t *sim) {  
+void draw_simulation(simulation_t *sim) {
+  assert(sim != NULL);
   for (size_t i = 0; i < sim->boids_len; ++i) {
     draw_boid(sim->boids[i]);
   }
@@ -91,7 +97,7 @@ int main(int argc, char *argv[]) {
   SetTargetFPS(120);
 
   // create simulation
-  const size_t boid_count = 1500;
+  const size_t boid_count = 1000;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
 
@@ -108,6 +114,7 @@ int main(int argc, char *argv[]) {
     // draw the simulation
     BeginDrawing();
       ClearBackground(BLACK);
+      DrawFPS(10, 10);
       draw_simulation(&sim);
     EndDrawing();
   }

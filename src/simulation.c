@@ -3,6 +3,7 @@
 
 #include "mvla.h"
 
+#include "arena.h"
 #include "simulation.h"
 
 /// separation, alignment, and cohesion are all normalized to magnitude=1
@@ -36,9 +37,12 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
   sim->ticks = 0;
   sim->width = width;
   sim->height = height;
+
+  arena_init(&sim->boids_arena, sizeof(boid_t)*2*boids_len);
+
   sim->boids_len = boids_len;
-  sim->boids = calloc(boids_len, sizeof(boid_t));
-  sim->boids_swap = calloc(boids_len, sizeof(boid_t));
+  sim->boids = arena_alloc(&sim->boids_arena, sizeof(boid_t), 4, boids_len);
+  sim->boids_swap = arena_alloc(&sim->boids_arena, sizeof(boid_t), 4, boids_len);
 
   for (size_t i = 0; i < boids_len; ++i) {
     sim->boids[i].position.x = width*randf();
@@ -50,8 +54,7 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
 
 void simulation_free(simulation_t *sim) {
   assert(sim != NULL);
-  free(sim->boids);
-  free(sim->boids_swap);
+  arena_free(&sim->boids_arena);
 }
 
 void simulation_tick(simulation_t *sim, float dt) {
@@ -69,6 +72,7 @@ void simulation_tick(simulation_t *sim, float dt) {
 }
 
 static void update_boids(simulation_t *sim, float dt) {
+  assert(sim != NULL);
   for (size_t i = 0; i < sim->boids_len; ++i) {
     update_boid_into_swap(
       &sim->boids_swap[i], &sim->boids[i],
@@ -79,6 +83,7 @@ static void update_boids(simulation_t *sim, float dt) {
 }
 
 static void constrain_boids(simulation_t *sim) {
+  assert(sim != NULL);
   for (size_t i = 0; i < sim->boids_len; ++i) {
     boid_t *curr = &sim->boids[i];
     float cx = curr->position.x, cy = curr->position.y;
@@ -98,6 +103,7 @@ static void constrain_boids(simulation_t *sim) {
 }
 
 static void swap_buffers(simulation_t *sim) {
+  assert(sim != NULL);
   // store boids in temp and move next gen into boids
   boid_t *temp_boids = sim->boids;
   sim->boids = sim->boids_swap;
@@ -105,6 +111,9 @@ static void swap_buffers(simulation_t *sim) {
 }
 
 static void update_boid_into_swap(boid_t *dest, const boid_t *src, boid_t *boids, size_t boids_len, float dt) {
+  assert(src != NULL);
+  assert(dest != NULL);
+  assert(boids != NULL);
   // now calculate deltas and update given acceleration
   boid_update_t update = calculate_deltas(*src, boids, boids_len);
   v2f_t acceleration = v2f_mul(calculate_acceleration(update), v2ff(dt));
@@ -113,6 +122,7 @@ static void update_boid_into_swap(boid_t *dest, const boid_t *src, boid_t *boids
 }
 
 static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_len) {
+  assert(boids != NULL);
   boid_update_t update = {0};
   size_t update_count = 0;
   for (size_t i = 0; i < boids_len; ++i, ++update_count) {
