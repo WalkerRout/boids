@@ -14,12 +14,12 @@
 
 #include "arena.h"
 
-#define WIDTH 1600.0f
-#define HEIGHT 1000.0f
+#define WIDTH 1650.0f
+#define HEIGHT 1050.0f
 
-#define BOID_WIDTH 8.0f
-#define BOID_HEIGHT 16.0f
-#define BOID_STILL_RADIUS 10.0f // when boid has no velocity, draw as circle
+#define BOID_WIDTH 6.0f
+#define BOID_HEIGHT 12.0f
+#define BOID_STILL_RADIUS 4.0f // when boid has no velocity, draw as circle
 #define BOID_COLOUR RED
 
 /// Draw a singular boid at its given position, facing in the direction of 
@@ -27,11 +27,7 @@
 void draw_boid(boid_t boid) {
   float vlen = v2f_len(boid.velocity);
   if (vlen == 0.0) {
-    DrawCircle(
-      boid.position.x, boid.position.y, 
-      BOID_STILL_RADIUS, 
-      BOID_COLOUR
-    );
+    DrawCircle(boid.position.x, boid.position.y, BOID_STILL_RADIUS, BOID_COLOUR);
     return;
   }
 
@@ -94,10 +90,10 @@ int main(int argc, char *argv[]) {
 
   // create window
   InitWindow((int) WIDTH, (int) HEIGHT, "boids");
-  SetTargetFPS(120);
+  SetTargetFPS(60);
 
   // create simulation
-  const size_t boid_count = 1000;
+  const size_t boid_count = 4000;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
 

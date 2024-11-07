@@ -3,6 +3,7 @@
 
 #include "mvla.h"
 
+#include "qtree.h"
 #include "arena.h"
 #include "simulation.h"
 
@@ -20,9 +21,9 @@ static void constrain_boids(simulation_t *sim);
 /// Swap buffers, old content is now ready to be written over
 static void swap_buffers(simulation_t *sim);
 /// Place the src boid into dest, and adjust given other boids and their count
-static void update_boid_into_swap(boid_t *dest, const boid_t *src, boid_t *boids, size_t boids_len, float delta_time);
+static void update_boid_into_swap(boid_t *dest, const boid_t src, qtree_t *qtree, float delta_time);
 /// Determine directional deltas for a boid
-static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_len);
+static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree);
 /// Calculate the acceleration of a boid with the given deltas
 static v2f_t calculate_acceleration(boid_update_t deltas);
 /// Cap a's magnitude to mag if mag > 0, otherwise do nothing
@@ -31,6 +32,8 @@ static v2f_t limit_magnitude(v2f_t a, float mag);
 static v2f_t steer(v2f_t current_velocity, v2f_t desired);
 /// Safe division, produce 0.0 where nan would be produced
 static v2f_t safe_v2f_div(v2f_t a, v2f_t b);
+/// The qtree_range_fn_t used in a boid quadtree
+static bool boid_in_range(void *ele, rect_t range);
 
 void simulation_init(simulation_t *sim, float width, float height, size_t boids_len) {
   assert(sim != NULL);
@@ -66,20 +69,33 @@ void simulation_tick(simulation_t *sim, float dt) {
   // - once we finish, we make boids point to boids_swap (the new written generation)
   //   and boids_swap point to boids (the last generation which we can overwrite now)
   update_boids(sim, dt);
-  swap_buffers(sim);
   constrain_boids(sim);
   sim->ticks += 1;
 }
 
 static void update_boids(simulation_t *sim, float dt) {
   assert(sim != NULL);
+
+  // initialize our quadtree
+  float hw = sim->width/2.0, hh = sim->height/2.0;
+  qtree_t *qtree = qtree_new(85, rect_new(v2f(hw, hh), hw, hh), boid_in_range);
+
   for (size_t i = 0; i < sim->boids_len; ++i) {
-    update_boid_into_swap(
-      &sim->boids_swap[i], &sim->boids[i],
-      sim->boids, sim->boids_len,
-      dt
-    );
+    qtree_insert(qtree, (void *) &sim->boids[i]);
   }
+
+  // place new generation into boids_swap
+  // TODO: this is embarrasingly parallel, everything is immutable except
+  // boids_swap, which will be chunked into non-overlapping segements anyway...
+  for (size_t i = 0; i < sim->boids_len; ++i) {
+    update_boid_into_swap(&sim->boids_swap[i], sim->boids[i], qtree, dt);
+  }
+
+  // free our quadtree before invalidating boids
+  qtree_free(qtree);
+
+  // boids field needs to point to new generation in swap (invalidate boids)
+  swap_buffers(sim);
 }
 
 static void constrain_boids(simulation_t *sim) {
@@ -110,42 +126,50 @@ static void swap_buffers(simulation_t *sim) {
   sim->boids_swap = temp_boids;
 }
 
-static void update_boid_into_swap(boid_t *dest, const boid_t *src, boid_t *boids, size_t boids_len, float dt) {
+static void update_boid_into_swap(boid_t *dest, const boid_t src, qtree_t *qtree, float dt) {
   assert(src != NULL);
   assert(dest != NULL);
   assert(boids != NULL);
   // now calculate deltas and update given acceleration
-  boid_update_t update = calculate_deltas(*src, boids, boids_len);
+  boid_update_t update = calculate_deltas(src, qtree);
   v2f_t acceleration = v2f_mul(calculate_acceleration(update), v2ff(dt));
-  dest->velocity = limit_magnitude(v2f_add(src->velocity, acceleration), MAX_SPEED);
-  dest->position = v2f_add(src->position, v2f_mul(src->velocity, v2ff(dt)));
+  dest->velocity = limit_magnitude(v2f_add(src.velocity, acceleration), MAX_SPEED);
+  dest->position = v2f_add(src.position, v2f_mul(src.velocity, v2ff(dt)));
 }
 
-static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_len) {
+
+static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
   assert(boids != NULL);
+
+  // initially we have deltas of 0
   boid_update_t update = {0};
+
+  rect_t neighbourhood = boid_neighbourhood(boid);
+  size_t neighbours_len = 0;
+  boid_t **neighbours = (boid_t **) qtree_query(qtree, neighbourhood, &neighbours_len);
+
   size_t update_count = 0;
-  for (size_t i = 0; i < boids_len; ++i, ++update_count) {
-    boid_t other = boids[i];
-    float cx = boid.position.x,  cy = boid.position.y,
-          ox = other.position.x, oy = other.position.y;
-    if (cx == ox && cy == oy) continue;
-    // TODO: quadtree this whole step
-    // determine neighbourhood of boid
-    float dist = boid_sqr_distance(boid, other);
-    if (dist < (HOOD_RADIUS*HOOD_RADIUS)) {
-      // separation
-      if (dist < (HOOD_RADIUS*HOOD_RADIUS)/3.0) {
-        v2f_t diff = v2f_sub(boid.position, other.position);
-        float mag_diff = v2f_len(diff);
-        v2f_t norm_diff = safe_v2f_div(diff, v2ff(mag_diff));
-        update.separation = v2f_add(update.separation, safe_v2f_div(norm_diff, v2ff(mag_diff)));
-      }
-      // alignment
-      update.alignment = v2f_add(update.alignment, other.velocity);
-      // cohesion
-      update.cohesion = v2f_add(update.cohesion, other.position);
+  for (size_t i = 0; i < neighbours_len; ++i, ++update_count) {
+    boid_t other = *neighbours[i];
+
+    if (boid.position.x == other.position.x && boid.position.y == other.position.y) {
+      continue;
     }
+
+    // separation
+    float dist = boid_sqr_distance(boid, other);
+    if (dist < (NEIGHBOURHOOD_WIDTH * NEIGHBOURHOOD_HEIGHT) / 9.0) {
+      v2f_t diff = v2f_sub(boid.position, other.position);
+      float mag_diff = v2f_len(diff);
+      v2f_t norm_diff = safe_v2f_div(diff, v2ff(mag_diff));
+      update.separation = v2f_add(update.separation, safe_v2f_div(norm_diff, v2ff(mag_diff)));
+    }
+
+    // alignment
+    update.alignment = v2f_add(update.alignment, other.velocity);
+
+    // cohesion
+    update.cohesion = v2f_add(update.cohesion, other.position);
   }
 
   if (update_count > 0) {
@@ -166,6 +190,8 @@ static boid_update_t calculate_deltas(boid_t boid, boid_t *boids, size_t boids_l
     v2f_t norm_velocity = safe_v2f_div(boid.velocity, v2ff(v2f_len(boid.velocity)));
     update.cohesion = steer(boid.velocity, v2f_mul(norm_velocity, v2ff(MAX_SPEED)));
   }
+
+  free(neighbours);
 
   return update;
 }
@@ -206,4 +232,9 @@ static v2f_t safe_v2f_div(v2f_t a, v2f_t b) {
   }
 
   return a;
+}
+
+static bool boid_in_range(void *ele, rect_t range) {
+  boid_t *boid = (boid_t *) ele;
+  return rect_contains_point(range, boid->position);
 }

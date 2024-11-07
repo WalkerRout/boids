@@ -3,7 +3,7 @@
 BIN=boids
 BUILD=build
 CONFIG=Release
-CFLAGS="-O2"
+CFLAGS="-O3"
 WORKDIR=$(pwd)
 
 function usage() {
