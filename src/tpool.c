@@ -4,6 +4,7 @@
 
 #include "tpool.h"
 
+/// Some unit of work to run in parallel
 typedef struct work {
   thread_func_t func;
   void *arg;
@@ -132,8 +133,10 @@ void tpool_wait(tpool_t *tp) {
       // is there work left?
       // is it alive (not stopped) with nonzero workers?
       // is it stopped with living threads?
-      if (tp->work_first != NULL || (!tp->stop && tp->working_cnt != 0) ||
-          (tp->stop && tp->thread_cnt != 0)) {
+      bool still_waiting = tp->work_first != NULL || 
+                           (!tp->stop && tp->working_cnt != 0) ||
+                           (tp->stop && tp->thread_cnt != 0);
+      if (still_waiting) {
         // wait for one thread to finish, looping again once it does
         // - thread potentially stealing another piece of work from queue
         pthread_cond_wait(&tp->working_cond, &tp->work_queue_mutex);
@@ -161,14 +164,12 @@ static void work_free(work_t *work) {
 }
 
 static work_t *work_get(tpool_t *tp) {
-  if (tp == NULL)
-    return NULL;
+  if (tp == NULL) return NULL;
 
   // try taking first available chunk of work in queue
   work_t *work;
   work = tp->work_first;
-  if (work == NULL)
-    return NULL;
+  if (work == NULL) return NULL;
 
   // if work was only one in queue, set queue to empty state
   if (work->next == NULL) {
