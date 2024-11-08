@@ -22,7 +22,7 @@ typedef struct simulation {
   boid_t *boids_swap;
 } simulation_t;
 
-/// Initialize a simulation with n randomly spawned boids
+/// Initialize a simulation with boids_len randomly spawned boids
 void simulation_init(simulation_t *sim, float width, float height, size_t boids_len);
 
 /// Free a simulations memory

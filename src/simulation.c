@@ -66,12 +66,6 @@ void simulation_free(simulation_t *sim) {
 
 void simulation_tick(simulation_t *sim, float dt) {
   assert(sim != NULL);
-  // boids stores our current (last) generation
-  // - we want to make a new generation
-  // - we will store it in boids_swap
-  // - so we write to boids_swap
-  // - once we finish, we make boids point to boids_swap (the new written generation)
-  //   and boids_swap point to boids (the last generation which we can overwrite now)
   update_boids(sim, dt);
   constrain_boids(sim);
   sim->ticks += 1;
@@ -140,7 +134,6 @@ static void update_boid_into_swap(boid_t *dest, const boid_t src, qtree_t *qtree
   dest->position = v2f_add(src.position, v2f_mul(src.velocity, v2ff(dt)));
 }
 
-
 static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
   // initially we have deltas of 0
   boid_update_t update = {0};
@@ -173,6 +166,9 @@ static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
     update.cohesion = v2f_add(update.cohesion, other.position);
   }
 
+  // we are done with our search
+  free(neighbours);
+
   if (update_count > 0) {
     // average over count
     update.separation = safe_v2f_div(update.separation, v2ff((float) update_count));
@@ -191,8 +187,6 @@ static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
     v2f_t norm_velocity = safe_v2f_div(boid.velocity, v2ff(v2f_len(boid.velocity)));
     update.cohesion = steer(boid.velocity, v2f_mul(norm_velocity, v2ff(MAX_SPEED)));
   }
-
-  free(neighbours);
 
   return update;
 }
