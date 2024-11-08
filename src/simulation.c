@@ -82,12 +82,8 @@ static void update_boids(simulation_t *sim, float dt) {
 
   // initialize our quadtree
   float hw = sim->width/2.0, hh = sim->height/2.0;
-  qtree_t *qtree = qtree_new(
-    &sim->arena,
-    85,
-    rect_new(v2f(hw, hh), hw, hh),
-    boid_in_range
-  );
+  rect_t sim_range = rect_new(v2f(hw, hh), hw, hh);
+  qtree_t *qtree = qtree_new(&sim->arena, 85, sim_range, boid_in_range);
 
   for (size_t i = 0; i < sim->boids_len; ++i) {
     qtree_insert(qtree, &sim->arena, (void *) &sim->boids[i]);

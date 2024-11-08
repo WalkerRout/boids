@@ -12,8 +12,6 @@
 #include "boid.h"
 #include "simulation.h"
 
-#include "arena.h"
-
 #define WIDTH 1650.0f
 #define HEIGHT 1000.0f
 
@@ -93,10 +91,10 @@ int main(int argc, char *argv[]) {
   SetTargetFPS(60);
 
   // create simulation
-  const size_t boid_count = 7000;
+  const size_t boid_count = 4000;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
-
+  
   // run simulation
   while (!WindowShouldClose()) {
     double dt = GetFrameTime();
@@ -117,7 +115,7 @@ int main(int argc, char *argv[]) {
 
   // close window
   CloseWindow();
-
+  
   // free simulation
   simulation_free(&sim);
 

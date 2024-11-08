@@ -1,7 +1,7 @@
 #ifndef ARENA_H
 #define ARENA_H
 
-#include <stddef.h>
+#include <stdint.h>
 
 #define REGION_DEFAULT_CAPACITY 4096
 

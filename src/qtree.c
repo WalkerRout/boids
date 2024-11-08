@@ -7,7 +7,7 @@
 /// Returns if a qtree has previously been subdivided
 static bool is_subdivided(qtree_t *qtree);
 /// Subdivide a qtree into its 4 quadrants
-static void subdivide(qtree_t *qtree);
+static void subdivide(qtree_t *qtree, arena_t *arena);
 /// Query qtree within a given range, filling and growing found data as needed 
 static void query_recursive(
   qtree_t *qtree, 
