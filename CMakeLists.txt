@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(boids C)
 
+set(CMAKE_C_STANDARD 11)
+
 if(CMAKE_COMPILER_IS_GNUCC)
   message(STATUS "gcc detected, adding specific flags")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall -Wextra -Wpedantic -Werror")

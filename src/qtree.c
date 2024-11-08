@@ -17,10 +17,16 @@ static void query_recursive(
   size_t *found_capacity
 );
 
-qtree_t *qtree_new(size_t capacity, rect_t range, qtree_range_fn_t check_range) {
+qtree_t *qtree_new(
+  arena_t *arena,
+  size_t capacity,
+  rect_t range,
+  qtree_range_fn_t check_range
+) {
+  assert(arena != NULL);
   assert(capacity > 0);
   
-  qtree_t *qtree = calloc(sizeof(qtree_t), 1);
+  qtree_t *qtree = arena_alloc(arena, sizeof(qtree_t));
   assert(qtree != NULL);
 
   qtree->check_range = check_range;
@@ -28,7 +34,8 @@ qtree_t *qtree_new(size_t capacity, rect_t range, qtree_range_fn_t check_range) 
 
   qtree->capacity = capacity;
   qtree->data_len = 0;
-  qtree->data = calloc(sizeof(void*), capacity);
+  qtree->data = arena_alloc(arena, capacity*sizeof(void *));
+  assert(qtree->data != NULL);
 
   qtree->ne = NULL;
   qtree->se = NULL;
@@ -38,19 +45,7 @@ qtree_t *qtree_new(size_t capacity, rect_t range, qtree_range_fn_t check_range) 
   return qtree;
 }
 
-void qtree_free(qtree_t *qtree) {
-  assert(qtree != NULL);
-  if (qtree->ne != NULL) {
-    qtree_free(qtree->ne);
-    qtree_free(qtree->se);
-    qtree_free(qtree->sw);
-    qtree_free(qtree->nw);
-  }
-  free(qtree->data);
-  free(qtree);
-}
-
-bool qtree_insert(qtree_t *qtree, void *ele) {
+bool qtree_insert(qtree_t *qtree, arena_t *arena, void *ele) {
   assert(qtree != NULL);
 
   if (!(qtree->check_range)(ele, qtree->range)) {
@@ -63,21 +58,22 @@ bool qtree_insert(qtree_t *qtree, void *ele) {
   }
 
   if (!is_subdivided(qtree)) {
-    subdivide(qtree);
+    subdivide(qtree, arena);
   }
 
   // Try inserting the element in one of the children
-  return (qtree_insert(qtree->ne, ele) ||
-          qtree_insert(qtree->se, ele) ||
-          qtree_insert(qtree->sw, ele) ||
-          qtree_insert(qtree->nw, ele));
+  return (qtree_insert(qtree->ne, arena, ele) ||
+          qtree_insert(qtree->se, arena, ele) ||
+          qtree_insert(qtree->sw, arena, ele) ||
+          qtree_insert(qtree->nw, arena, ele));
 }
 
 void **qtree_query(qtree_t *qtree, rect_t query_range, size_t *out_count) {
   assert(qtree != NULL);
 
   size_t found_capacity = 16;
-  void **found = malloc(sizeof(void *) * found_capacity);
+  void **found = calloc(sizeof(void *), found_capacity);
+  assert(found != NULL);
   *out_count = 0;
 
   query_recursive(qtree, query_range, &found, out_count, &found_capacity);
@@ -90,16 +86,16 @@ static bool is_subdivided(qtree_t *qtree) {
   return qtree->ne != NULL;
 }
 
-static void subdivide(qtree_t *qtree) {
+static void subdivide(qtree_t *qtree, arena_t *arena) {
   assert(qtree != NULL);
 
   rect_t ne = {0}, se = {0}, sw = {0}, nw = {0};
   rect_quadrants(qtree->range, &ne, &se, &sw, &nw);
 
-  qtree->ne = qtree_new(qtree->capacity, ne, qtree->check_range);
-  qtree->se = qtree_new(qtree->capacity, se, qtree->check_range);
-  qtree->sw = qtree_new(qtree->capacity, sw, qtree->check_range);
-  qtree->nw = qtree_new(qtree->capacity, nw, qtree->check_range);
+  qtree->ne = qtree_new(arena, qtree->capacity, ne, qtree->check_range);
+  qtree->se = qtree_new(arena, qtree->capacity, se, qtree->check_range);
+  qtree->sw = qtree_new(arena, qtree->capacity, sw, qtree->check_range);
+  qtree->nw = qtree_new(arena, qtree->capacity, nw, qtree->check_range);
 }
 
 static void query_recursive(

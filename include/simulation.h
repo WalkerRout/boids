@@ -11,12 +11,12 @@
 /// A boids flocking simulation (rules for separation, alignment, cohesion)
 typedef struct simulation {
   size_t ticks;
+  arena_t arena;
 
   // dimensions for simulation
   float width, height;
 
   // fixed size list of boids
-  arena_t boids_arena;
   size_t  boids_len;
   boid_t *boids;
   boid_t *boids_swap;

@@ -15,10 +15,10 @@
 #include "arena.h"
 
 #define WIDTH 1650.0f
-#define HEIGHT 1050.0f
+#define HEIGHT 1000.0f
 
-#define BOID_WIDTH 6.0f
-#define BOID_HEIGHT 12.0f
+#define BOID_WIDTH 4.0f
+#define BOID_HEIGHT 7.0f
 #define BOID_STILL_RADIUS 4.0f // when boid has no velocity, draw as circle
 #define BOID_COLOUR RED
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
   SetTargetFPS(60);
 
   // create simulation
-  const size_t boid_count = 4000;
+  const size_t boid_count = 7000;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
 

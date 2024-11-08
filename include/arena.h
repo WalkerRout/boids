@@ -3,29 +3,34 @@
 
 #include <stddef.h>
 
+#define REGION_DEFAULT_CAPACITY 4096
+
 /// A region of memory
-/// TODO: convert to an actual flexible block of memory
-typedef struct arena_region {
-  unsigned char *beg;
-  unsigned char *end;
-} arena_region_t;
+typedef struct region {
+  struct region *next;
+  size_t capacity;
+  size_t offset;
+  uintptr_t data[];
+} region_t;
 
 /// An arena allocator containing a list of pages of memory
-/// TODO: beginning and end page pointers
 typedef struct arena {
-  ptrdiff_t offset;
-  arena_region_t mem;
+  // track our list of regions
+  region_t *beg;
+  // track the current region we are operating on
+  region_t *end;
 } arena_t;
 
-/// Initialize an arena with a predefined capacity
-void arena_init(arena_t *arena, ptrdiff_t capacity);
-
-/// Try to allocate some memory in this arena, returning NULL if full
-void *arena_alloc(arena_t *arena, ptrdiff_t size, ptrdiff_t align, ptrdiff_t count);
+/// Initialize an arena
+void arena_init(arena_t *arena);
 
 /// Free all memory associated with this arena
 void arena_free(arena_t *arena);
 
-// TODO: arena_clear(), which sets all region offset pointers to 0
+/// Try to allocate some memory in this arena
+void *arena_alloc(arena_t *arena, size_t size_bytes);
+
+/// Empty all regions in arena without releasing memory
+void arena_clear(arena_t *arena);
 
 #endif // ARENA_H

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <stdalign.h>
 
 #include "mvla.h"
 
@@ -38,14 +39,15 @@ static bool boid_in_range(void *ele, rect_t range);
 void simulation_init(simulation_t *sim, float width, float height, size_t boids_len) {
   assert(sim != NULL);
   sim->ticks = 0;
+  
+  arena_init(&sim->arena);
+
   sim->width = width;
   sim->height = height;
 
-  arena_init(&sim->boids_arena, sizeof(boid_t)*2*boids_len);
-
   sim->boids_len = boids_len;
-  sim->boids = arena_alloc(&sim->boids_arena, sizeof(boid_t), 4, boids_len);
-  sim->boids_swap = arena_alloc(&sim->boids_arena, sizeof(boid_t), 4, boids_len);
+  sim->boids = calloc(sizeof(boid_t), boids_len);
+  sim->boids_swap = calloc(sizeof(boid_t), boids_len);
 
   for (size_t i = 0; i < boids_len; ++i) {
     sim->boids[i].position.x = width*randf();
@@ -57,7 +59,9 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
 
 void simulation_free(simulation_t *sim) {
   assert(sim != NULL);
-  arena_free(&sim->boids_arena);
+  free(sim->boids);
+  free(sim->boids_swap);
+  arena_free(&sim->arena);
 }
 
 void simulation_tick(simulation_t *sim, float dt) {
@@ -78,21 +82,26 @@ static void update_boids(simulation_t *sim, float dt) {
 
   // initialize our quadtree
   float hw = sim->width/2.0, hh = sim->height/2.0;
-  qtree_t *qtree = qtree_new(85, rect_new(v2f(hw, hh), hw, hh), boid_in_range);
+  qtree_t *qtree = qtree_new(
+    &sim->arena,
+    85,
+    rect_new(v2f(hw, hh), hw, hh),
+    boid_in_range
+  );
 
   for (size_t i = 0; i < sim->boids_len; ++i) {
-    qtree_insert(qtree, (void *) &sim->boids[i]);
+    qtree_insert(qtree, &sim->arena, (void *) &sim->boids[i]);
   }
 
   // place new generation into boids_swap
-  // TODO: this is embarrasingly parallel, everything is immutable except
+  // TODO: this is embarrassingly parallel, everything is immutable except
   // boids_swap, which will be chunked into non-overlapping segements anyway...
   for (size_t i = 0; i < sim->boids_len; ++i) {
     update_boid_into_swap(&sim->boids_swap[i], sim->boids[i], qtree, dt);
   }
 
-  // free our quadtree before invalidating boids
-  qtree_free(qtree);
+  // reset the arena, effectively freeing qtree
+  arena_clear(&sim->arena);
 
   // boids field needs to point to new generation in swap (invalidate boids)
   swap_buffers(sim);
@@ -127,9 +136,7 @@ static void swap_buffers(simulation_t *sim) {
 }
 
 static void update_boid_into_swap(boid_t *dest, const boid_t src, qtree_t *qtree, float dt) {
-  assert(src != NULL);
   assert(dest != NULL);
-  assert(boids != NULL);
   // now calculate deltas and update given acceleration
   boid_update_t update = calculate_deltas(src, qtree);
   v2f_t acceleration = v2f_mul(calculate_acceleration(update), v2ff(dt));
@@ -139,8 +146,6 @@ static void update_boid_into_swap(boid_t *dest, const boid_t src, qtree_t *qtree
 
 
 static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
-  assert(boids != NULL);
-
   // initially we have deltas of 0
   boid_update_t update = {0};
 
@@ -197,9 +202,9 @@ static boid_update_t calculate_deltas(boid_t boid, qtree_t *qtree) {
 }
 
 static v2f_t calculate_acceleration(boid_update_t deltas) {
-  float separation_scale = 1.0;
+  float separation_scale = 2.0;
   float alignment_scale = 2.0;
-  float cohesion_scale = 5.0;
+  float cohesion_scale = 3.0;
   // scale deltas (for customizing behaviour), default is a noop
   v2f_t sep = v2f_mul(deltas.separation, v2ff(separation_scale));
   v2f_t ali = v2f_mul(deltas.alignment, v2ff(alignment_scale));
