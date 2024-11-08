@@ -72,6 +72,7 @@ void **qtree_query(qtree_t *qtree, rect_t query_range, size_t *out_count) {
   assert(qtree != NULL);
 
   size_t found_capacity = 16;
+  // void **found = arena_alloc(arena, found_capacity*sizeof(void *));
   void **found = calloc(sizeof(void *), found_capacity);
   assert(found != NULL);
   *out_count = 0;
@@ -119,6 +120,7 @@ static void query_recursive(
       // dynamic resize
       if (*found_count + 1 > *found_capacity) {
         *found_capacity *= 2;
+        // *found = arena_realloc(arena, *found, *found_capacity * sizeof(void *));
         *found = realloc(*found, sizeof(void *) * (*found_capacity));
         assert(*found != NULL);
       }

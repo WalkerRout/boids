@@ -22,6 +22,12 @@ if (LIBM)
   target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBM})
 endif()
 
+find_library(LIBPTHREAD pthread)
+if (LIBPTHREAD)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBPTHREAD})
+endif()
+
+# error if we cant find this, conan should do this for us
 target_link_libraries(${PROJECT_NAME} PUBLIC raylib)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)

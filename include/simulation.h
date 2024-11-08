@@ -1,6 +1,8 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include "tpool.h"
+
 #include "boid.h"
 #include "arena.h"
 
@@ -12,6 +14,9 @@
 typedef struct simulation {
   size_t ticks;
   arena_t arena;
+
+  // threadpool for boid updates
+  tpool_t *pool;
 
   // dimensions for simulation
   float width, height;

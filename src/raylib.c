@@ -1,7 +1,8 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
+#include <pthread.h>
 
 #include <raylib.h>
 
@@ -15,9 +16,9 @@
 #define WIDTH 1650.0f
 #define HEIGHT 1000.0f
 
-#define BOID_WIDTH 4.0f
-#define BOID_HEIGHT 7.0f
-#define BOID_STILL_RADIUS 4.0f // when boid has no velocity, draw as circle
+#define BOID_WIDTH 3.0f
+#define BOID_HEIGHT 6.0f
+#define BOID_STILL_RADIUS 3.0f // when boid has no velocity, draw as circle
 #define BOID_COLOUR RED
 
 /// Draw a singular boid at its given position, facing in the direction of 
@@ -91,10 +92,10 @@ int main(int argc, char *argv[]) {
   SetTargetFPS(60);
 
   // create simulation
-  const size_t boid_count = 4000;
+  const size_t boid_count = 10000;
   simulation_t sim = {0};
   simulation_init(&sim, WIDTH, HEIGHT, boid_count);
-  
+
   // run simulation
   while (!WindowShouldClose()) {
     double dt = GetFrameTime();
@@ -115,9 +116,12 @@ int main(int argc, char *argv[]) {
 
   // close window
   CloseWindow();
-  
+
   // free simulation
   simulation_free(&sim);
+
+  // run until all threads finish (avoid pthread_create memory leaks in valgrind)
+  pthread_exit(NULL);
 
   return EXIT_SUCCESS;
 }

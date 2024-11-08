@@ -38,6 +38,7 @@ qtree_t *qtree_new(
 bool qtree_insert(qtree_t *qtree, arena_t *arena, void *ele);
 
 /// Get a list of all out_count elements in the tree falling into query_range
+/// (dont forget to free the memory returned)
 void **qtree_query(qtree_t *qtree, rect_t query_range, size_t *out_count);
 
 #endif // QTREE_H

@@ -8,12 +8,24 @@
 #include "arena.h"
 #include "simulation.h"
 
-/// separation, alignment, and cohesion are all normalized to magnitude=1
+#define THREAD_COUNT 4
+
+/// Separation, alignment, and cohesion are all normalized to magnitude=1
 typedef struct boid_update {
   v2f_t separation;
   v2f_t alignment;
   v2f_t cohesion;
 } boid_update_t;
+
+/// A unit of work to perform on another thread; pretty much a request to update
+/// sim->boids_swap[start..end] given the state of qtree
+typedef struct {
+  simulation_t *sim;
+  size_t start;
+  size_t end;
+  float dt;
+  qtree_t *qtree;
+} boid_chunk_task_t;
 
 /// Update all boids in the simulation, storing in swap buffer
 static void update_boids(simulation_t *sim, float dt);
@@ -35,12 +47,16 @@ static v2f_t steer(v2f_t current_velocity, v2f_t desired);
 static v2f_t safe_v2f_div(v2f_t a, v2f_t b);
 /// The qtree_range_fn_t used in a boid quadtree
 static bool boid_in_range(void *ele, rect_t range);
+/// The thread_func_t work we want to do to update a range of boids into boids_swap
+static void chunk_boid_update(void *arg);
 
 void simulation_init(simulation_t *sim, float width, float height, size_t boids_len) {
   assert(sim != NULL);
   sim->ticks = 0;
   
   arena_init(&sim->arena);
+
+  sim->pool = tpool_init(THREAD_COUNT);
 
   sim->width = width;
   sim->height = height;
@@ -62,6 +78,7 @@ void simulation_free(simulation_t *sim) {
   free(sim->boids);
   free(sim->boids_swap);
   arena_free(&sim->arena);
+  tpool_free(sim->pool);
 }
 
 void simulation_tick(simulation_t *sim, float dt) {
@@ -83,17 +100,40 @@ static void update_boids(simulation_t *sim, float dt) {
     qtree_insert(qtree, &sim->arena, (void *) &sim->boids[i]);
   }
 
-  // place new generation into boids_swap
-  // TODO: this is embarrassingly parallel, everything is immutable except
-  // boids_swap, which will be chunked into non-overlapping segements anyway...
-  for (size_t i = 0; i < sim->boids_len; ++i) {
-    update_boid_into_swap(&sim->boids_swap[i], sim->boids[i], qtree, dt);
+  // Determine the number of chunks (e.g., number of threads in the pool)
+  size_t chunk_size = sim->boids_len / THREAD_COUNT;
+  size_t remainder = sim->boids_len % THREAD_COUNT;
+
+  boid_chunk_task_t tasks[THREAD_COUNT] = {0};
+
+  size_t curr = 0;
+  for (size_t i = 0; i < THREAD_COUNT; ++i) {
+    size_t start = curr;
+    size_t end = start + chunk_size;
+    if (i < remainder) {
+      // add additional boids over first remainder threads
+      end += 1;
+    }
+
+    tasks[i].sim = sim;
+    tasks[i].start = start;
+    tasks[i].end = end;
+    tasks[i].dt = dt;
+    tasks[i].qtree = qtree;
+
+    // add unit of work to threadpool
+    tpool_add_work(sim->pool, chunk_boid_update, &tasks[i]);
+
+    curr = end;
   }
 
-  // reset the arena, effectively freeing qtree
+  // finish updating
+  tpool_wait(sim->pool);
+
+  // reset arena/free quadtree
   arena_clear(&sim->arena);
 
-  // boids field needs to point to new generation in swap (invalidate boids)
+  // swap buffers
   swap_buffers(sim);
 }
 
@@ -232,4 +272,17 @@ static v2f_t safe_v2f_div(v2f_t a, v2f_t b) {
 static bool boid_in_range(void *ele, rect_t range) {
   boid_t *boid = (boid_t *) ele;
   return rect_contains_point(range, boid->position);
+}
+
+static void chunk_boid_update(void *arg) {
+  boid_chunk_task_t *task = (boid_chunk_task_t *)arg;
+  simulation_t *sim = task->sim;
+  size_t start = task->start;
+  size_t end = task->end;
+  qtree_t *qtree = task->qtree;
+  float dt = task->dt;
+
+  for (size_t i = start; i < end; ++i) {
+    update_boid_into_swap(&sim->boids_swap[i], sim->boids[i], qtree, dt);
+  }
 }
