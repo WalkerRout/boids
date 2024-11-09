@@ -1,11 +1,9 @@
 #include <stdlib.h>
 #include <assert.h>
-#include <stdalign.h>
 
 #include "mvla.h"
 
 #include "qtree.h"
-#include "arena.h"
 #include "simulation.h"
 
 #define THREAD_COUNT 4
@@ -56,7 +54,7 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
   
   arena_init(&sim->arena);
 
-  sim->pool = tpool_init(THREAD_COUNT);
+  sim->pool = tpool_new(THREAD_COUNT);
 
   sim->width = width;
   sim->height = height;
@@ -270,11 +268,13 @@ static v2f_t safe_v2f_div(v2f_t a, v2f_t b) {
 }
 
 static bool boid_in_range(void *ele, rect_t range) {
+  assert(ele != NULL);
   boid_t *boid = (boid_t *) ele;
   return rect_contains_point(range, boid->position);
 }
 
 static void chunk_boid_update(void *arg) {
+  assert(arg != NULL);
   boid_chunk_task_t *task = (boid_chunk_task_t *)arg;
   simulation_t *sim = task->sim;
   size_t start = task->start;

@@ -32,7 +32,6 @@ void arena_free(arena_t *arena) {
 
 void *arena_alloc(arena_t *arena, size_t size_bytes) {
   assert(arena != NULL);
-
   // skip only past next boundary and normalize to its start
   size_t size = (size_bytes + sizeof(uintptr_t)-1)/sizeof(uintptr_t);
 

@@ -13,6 +13,8 @@
 #include "boid.h"
 #include "simulation.h"
 
+#define FPS 60
+
 #define WIDTH 1650.0f
 #define HEIGHT 1000.0f
 
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
 
   // create window
   InitWindow((int) WIDTH, (int) HEIGHT, "boids");
-  SetTargetFPS(60);
+  SetTargetFPS(FPS);
 
   // create simulation
   const size_t boid_count = 10000;

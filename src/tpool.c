@@ -36,7 +36,7 @@ static work_t *work_get(tpool_t *tp);
 /// A perpetually running thread that manages work extraction and execution
 static void *worker(void *arg);
 
-tpool_t *tpool_init(size_t num) {
+tpool_t *tpool_new(size_t num) {
   if (num == 0) num = 2;
 
   // init self
