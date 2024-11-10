@@ -18,6 +18,8 @@ typedef struct boid_update {
 /// A unit of work to perform on another thread; pretty much a request to update
 /// sim->boids_swap[start..end] given the state of qtree
 typedef struct {
+  // TODO: probably shouldnt be storing the whole sim, since we read/write from
+  // different parts of it...
   simulation_t *sim;
   size_t start;
   size_t end;
@@ -88,28 +90,26 @@ void simulation_tick(simulation_t *sim, float dt) {
 
 static void update_boids(simulation_t *sim, float dt) {
   assert(sim != NULL);
-
   // initialize our quadtree
   float hw = sim->width/2.0, hh = sim->height/2.0;
   rect_t sim_range = rect_new(v2f(hw, hh), hw, hh);
   qtree_t *qtree = qtree_new(&sim->arena, 85, sim_range, boid_in_range);
-
+  
   for (size_t i = 0; i < sim->boids_len; ++i) {
     qtree_insert(qtree, &sim->arena, (void *) &sim->boids[i]);
   }
 
-  // Determine the number of chunks (e.g., number of threads in the pool)
+  // chunk up population and pick up slack
   size_t chunk_size = sim->boids_len / THREAD_COUNT;
-  size_t remainder = sim->boids_len % THREAD_COUNT;
-
+  size_t slack = sim->boids_len % THREAD_COUNT;
   boid_chunk_task_t tasks[THREAD_COUNT] = {0};
 
   size_t curr = 0;
   for (size_t i = 0; i < THREAD_COUNT; ++i) {
     size_t start = curr;
     size_t end = start + chunk_size;
-    if (i < remainder) {
-      // add additional boids over first remainder threads
+    if (i < slack) {
+      // add additional boids over first slack threads
       end += 1;
     }
 
@@ -127,10 +127,8 @@ static void update_boids(simulation_t *sim, float dt) {
 
   // finish updating
   tpool_wait(sim->pool);
-
   // reset arena/free quadtree
   arena_clear(&sim->arena);
-
   // swap buffers
   swap_buffers(sim);
 }
@@ -252,18 +250,8 @@ static v2f_t limit_magnitude(v2f_t a, float mag) {
 }
 
 static v2f_t safe_v2f_div(v2f_t a, v2f_t b) {
-  if (b.x == 0.0) {
-    a.x = 0.0;
-  } else {
-    a.x /= b.x;
-  }
-
-  if (b.y == 0.0) {
-    a.y = 0.0;
-  } else {
-    a.y /= b.y;
-  }
-
+  a.x = (b.x == 0.0) ? 0.0 : a.x / b.x;
+  a.y = (b.y == 0.0) ? 0.0 : a.y / b.y;
   return a;
 }
 

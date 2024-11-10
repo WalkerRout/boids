@@ -30,8 +30,8 @@ bool rect_is_inside(rect_t rect, rect_t other) {
 }
 
 void rect_quadrants(rect_t rect, rect_t *ne, rect_t *nw, rect_t *sw, rect_t *se) {
-  float hw = rect.half_width / 2.0f;
-  float hh = rect.half_height / 2.0f;
+  float hw = rect.half_width/2.0;
+  float hh = rect.half_height/2.0;
 
   ne->center = v2f(rect.center.x + hw, rect.center.y + hh);
   ne->half_width = hw;

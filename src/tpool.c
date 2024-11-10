@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include <stdbool.h>
 #include <pthread.h>
 
@@ -33,7 +34,8 @@ static work_t *work_init(thread_func_t func, void *arg);
 static void work_free(work_t *work);
 /// Extract a chunk of work from tpool (need exclusive access)
 static work_t *work_get(tpool_t *tp);
-/// A perpetually running thread that manages work extraction and execution
+/// A perpetually running thread that manages work extraction and execution,
+/// returns no data but must match thread_func_t signature
 static void *worker(void *arg);
 
 tpool_t *tpool_new(size_t num) {
@@ -56,6 +58,7 @@ tpool_t *tpool_new(size_t num) {
   pthread_t thread;
   for (size_t i = 0; i < num; i++) {
     pthread_create(&thread, NULL, worker, tp);
+    // BUG: valgrind might not catch some deallocated threads after main exits
     pthread_detach(thread);
   }
 
@@ -63,7 +66,7 @@ tpool_t *tpool_new(size_t num) {
 }
 
 void tpool_free(tpool_t *tp) {
-  if (tp == NULL) return;
+  assert(tp != NULL);
 
   // mutex zone
   {
@@ -93,7 +96,7 @@ void tpool_free(tpool_t *tp) {
 }
 
 bool tpool_add_work(tpool_t *tp, thread_func_t func, void *arg) {
-  if (tp == NULL) return false;
+  assert(tp != NULL);
 
   work_t *work = work_init(func, arg);
   if (work == NULL) return false;
@@ -124,7 +127,7 @@ bool tpool_add_work(tpool_t *tp, thread_func_t func, void *arg) {
 }
 
 void tpool_wait(tpool_t *tp) {
-  if (tp == NULL) return;
+  assert(tp != NULL);
 
   // mutex zone
   {
@@ -164,7 +167,7 @@ static void work_free(work_t *work) {
 }
 
 static work_t *work_get(tpool_t *tp) {
-  if (tp == NULL) return NULL;
+  assert(tp != NULL);
 
   // try taking first available chunk of work in queue
   work_t *work;
@@ -184,8 +187,7 @@ static work_t *work_get(tpool_t *tp) {
 }
 
 static void *worker(void *arg) {
-  if (arg == NULL) return NULL;
-
+  assert(arg != NULL);
   tpool_t *tp = arg;
 
   for (;;) {
@@ -224,6 +226,8 @@ static void *worker(void *arg) {
       pthread_mutex_unlock(&tp->work_queue_mutex);
     }
   }
+
+  // technically still in mutex zone
 
   // this thread is done, decrement thread count
   tp->thread_cnt--;
