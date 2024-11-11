@@ -4,8 +4,8 @@ Boids flocking with separation, alignment, and cohesion rules.
 Some simpler optimizations were implemented and are detailed below, the simulation can also be reset/randomized by pressing the R key.
 
 ## Emergence
-![Swarm slowly aligning](https://s11.gifyu.com/images/Syiet.gif)
-![Aligned population in a line](https://s11.gifyu.com/images/Syie5.gif)
+![Swarm slowly aligning](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHBkdGtla2F1cWt4eXd3and5OGx6dzc5ZjNyNm9qN3E4cDVncW51YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xEGEaOjpmPRvuPtyRe/giphy.gif)
+![Aligned population in a line](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnN4cDhtZjd6dWRmazJocHk3c21iejA1ODk3MG8yYjZ5aWFkNHk5NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uDPSry9FxW6kWdGxHI/giphy.gif)
 
 Individuals will automatically align themselves over time, based on the below rule set.
 
