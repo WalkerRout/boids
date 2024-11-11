@@ -14,17 +14,17 @@ The rules are adjusted by scaling their steer velocities (in simulation.c's calc
 
 The boids flock towards the origin by default (top-left corner), wrapping and repeating.
 
-##### Separation Rule
+#### Separation Rule
 **Individuals steer away from local flockmates.**
 
 Individuals want to maintain some semblance of personal space, so we don't get a huge overlapping line of boids...
 
-##### Alignment Rule
+#### Alignment Rule
 **Individuals steer towards the average heading of local flockmates.**
 
 We would like to make sure all the individuals are moving together, so this rule will assist in aligning the entire population as the changes propagate.
 
-##### Cohesion Rule
+#### Cohesion Rule
 **Individuals steer towards the average position of local flockmates.**
 
 This is the core of the flocking; we want the boids to aggregate together, so we can emulate the behaviour of real-life birds.
