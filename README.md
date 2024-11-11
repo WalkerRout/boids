@@ -1,7 +1,31 @@
 # boids
 Boids flocking with separation, alignment, and cohesion rules.
 
-Some simpler optimizations were implemented and are detailed below.
+Some simpler optimizations were implemented and are detailed below, the simulation can also be reset/randomized by pressing the R key.
+
+## Emergence
+![Swarm slowly aligning](https://i.ibb.co/887W0DL/swarm.gif)
+![Aligned population in a line](https://i.ibb.co/887W0DL/line.gif)
+
+Individuals will automatically align themselves over time, based on the below rule set.
+
+## Rule Set
+The rules are adjusted by scaling their steer velocities (in simulation.c's calculate_acceleration), which allows for emergence of different patterns
+
+The boids flock towards the origin by default (top-left corner), wrapping and repeating.
+
+##### Separation
+Individuals steer away from local flockmates.
+##### Alignment
+Individuals steer towards the average heading of local flockmates.
+##### Cohesion
+Individuals steer towards the average position of local flockmates.
+
+## Setup
+1. Install conan with `sudo pip3 install conan` (assuming you have pip3 and are using unix, otherwise skip the sudo)
+2. Mark the launch script executable with `chmod +x ./launch.sh`
+3. Build and run the simulation with `sudo ./launch.sh doit` (open launch.sh for more detailed options...)
+   - This should automatically install dependencies on your system (raylib)
 
 ## Optimizations
 #### Swap buffers
