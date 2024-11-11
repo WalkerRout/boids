@@ -10,16 +10,24 @@ Some simpler optimizations were implemented and are detailed below, the simulati
 Individuals will automatically align themselves over time, based on the below rule set.
 
 ## Rule Set
-The rules are adjusted by scaling their steer velocities (in simulation.c's calculate_acceleration), which allows for emergence of different patterns
+The rules are adjusted by scaling their steer velocities (in simulation.c's calculate_acceleration), allowing different patterns to emerge. Additional rules based on local flockmates can be easily introduced, as it would just involve adding a new rule to `boid_update_t`... the current rules were chosen given their popularity and effectiveness, in that we can get a very good visualization of emergence with only the 3 rules chosen.
 
 The boids flock towards the origin by default (top-left corner), wrapping and repeating.
 
-##### Separation
-Individuals steer away from local flockmates.
-##### Alignment
-Individuals steer towards the average heading of local flockmates.
-##### Cohesion
-Individuals steer towards the average position of local flockmates.
+##### Separation Rule
+**Individuals steer away from local flockmates.**
+
+Individuals want to maintain some semblance of personal space, so we don't get a huge overlapping line of boids...
+
+##### Alignment Rule
+**Individuals steer towards the average heading of local flockmates.**
+
+We would like to make sure all the individuals are moving together, so this rule will assist in aligning the entire population as the changes propagate.
+
+##### Cohesion Rule
+**Individuals steer towards the average position of local flockmates.**
+
+This is the core of the flocking; we want the boids to aggregate together, so we can emulate the behaviour of real-life birds.
 
 ## Setup
 1. Install conan with `sudo pip3 install conan` (assuming you have pip3 and are using unix, otherwise skip the sudo)
