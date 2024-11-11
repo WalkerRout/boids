@@ -3,6 +3,8 @@ Boids flocking with separation, alignment, and cohesion rules.
 
 Some simpler optimizations were implemented and are detailed below, the simulation can also be reset/randomized by pressing the R key.
 
+** DISCLAIMER: THIS SIMULATION DEPENDS ON POSIX THREADS, IT MAY NOT RUN ON WINDOWS DEPENDING ON YOUR CONFIG (it will run with WSL2 and xrdp though)**
+
 ## Emergence
 ![Swarm slowly aligning](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHBkdGtla2F1cWt4eXd3and5OGx6dzc5ZjNyNm9qN3E4cDVncW51YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xEGEaOjpmPRvuPtyRe/giphy.gif)
 ![Aligned population in a line](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnN4cDhtZjd6dWRmazJocHk3c21iejA1ODk3MG8yYjZ5aWFkNHk5NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uDPSry9FxW6kWdGxHI/giphy.gif)
@@ -30,7 +32,7 @@ We would like to make sure all the individuals are moving together, so this rule
 This is the core of the flocking; we want the boids to aggregate together, so we can emulate the behaviour of real-life birds.
 
 ## Setup
-1. Install conan with `sudo pip3 install conan` (assuming you have pip3 and are using unix, otherwise skip the sudo)
+1. Install conan with `sudo pip3 install conan` (assuming you have pip3 and are using unix)
 2. Mark the launch script executable with `chmod +x ./launch.sh`
 3. Build and run the simulation with `sudo ./launch.sh doit` (open launch.sh for more detailed options...)
    - This should automatically install dependencies on your system (raylib)
