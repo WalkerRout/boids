@@ -3,7 +3,7 @@ Boids flocking with separation, alignment, and cohesion rules.
 
 Some simpler optimizations were implemented and are detailed below, the simulation can also be reset/randomized by pressing the R key.
 
-** DISCLAIMER: THIS SIMULATION DEPENDS ON POSIX THREADS, IT MAY NOT RUN ON WINDOWS DEPENDING ON YOUR CONFIG (it will run with WSL2 and xrdp though)**
+**DISCLAIMER: THIS SIMULATION DEPENDS ON POSIX THREADS, IT MAY NOT RUN ON WINDOWS DEPENDING ON YOUR CONFIG (it will run with WSL2 and xrdp though)**
 
 ## Emergence
 ![Swarm slowly aligning](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHBkdGtla2F1cWt4eXd3and5OGx6dzc5ZjNyNm9qN3E4cDVncW51YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xEGEaOjpmPRvuPtyRe/giphy.gif)
