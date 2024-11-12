@@ -5,8 +5,8 @@
 
 #include "rect.h"
 
-#define NEIGHBOURHOOD_WIDTH  40.0
-#define NEIGHBOURHOOD_HEIGHT 30.0
+#define NEIGHBOURHOOD_WIDTH  (40.0)
+#define NEIGHBOURHOOD_HEIGHT (30.0)
 
 /// A bird-oid object in the simulation, sitting at some position with some heading
 typedef struct boid {

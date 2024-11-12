@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define REGION_DEFAULT_CAPACITY 4096
+#define REGION_DEFAULT_CAPACITY (4096)
 
 /// A region of memory
 typedef struct region {

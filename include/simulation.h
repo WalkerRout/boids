@@ -6,9 +6,9 @@
 #include "boid.h"
 #include "arena.h"
 
-#define HOOD_RADIUS 60.0f
-#define MAX_SPEED 200.0f
-#define MAX_FORCE 50.0f
+#define HOOD_RADIUS (60.0)
+#define MAX_SPEED (200.0)
+#define MAX_FORCE (50.0)
 
 /// A boids flocking simulation (rules for separation, alignment, cohesion)
 typedef struct simulation {

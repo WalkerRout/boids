@@ -6,7 +6,7 @@
 #include "qtree.h"
 #include "simulation.h"
 
-#define THREAD_COUNT 4
+#define THREAD_COUNT (4)
 
 /// Separation, alignment, and cohesion are all normalized to magnitude=1
 typedef struct boid_update {

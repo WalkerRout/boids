@@ -1,7 +1,7 @@
 #ifndef TPOOL_H
 #define TPOOL_H
 
-//#include <stddef.h>
+#include <stddef.h>
 
 /// A function type we will use to represent a unit of work to perform in parallel
 typedef void (*thread_func_t)(void *arg);

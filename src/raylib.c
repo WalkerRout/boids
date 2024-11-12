@@ -13,15 +13,18 @@
 #include "boid.h"
 #include "simulation.h"
 
-#define FPS 60
+#define FPS (60)
 
-#define WIDTH 1650.0f
-#define HEIGHT 1000.0f
+#define TITLE ("boids")
+#define WIDTH (1650.0)
+#define HEIGHT (1000.0)
 
-#define BOID_WIDTH 3.0f
-#define BOID_HEIGHT 6.0f
-#define BOID_STILL_RADIUS 3.0f // when boid has no velocity, draw as circle
-#define BOID_COLOUR RED
+#define BOID_WIDTH (3.0)
+#define BOID_HEIGHT (6.0)
+#define BOID_STILL_RADIUS (3.0) // when boid has no velocity, draw as circle
+
+#define BOID_COUNT (10000)
+#define BOID_COLOUR (RED)
 
 /// Draw a singular boid at its given position, facing in the direction of 
 /// its normalized velocity
@@ -90,13 +93,12 @@ int main(int argc, char *argv[]) {
   srand(time(NULL));
 
   // create window
-  InitWindow((int) WIDTH, (int) HEIGHT, "boids");
+  InitWindow((int) WIDTH, (int) HEIGHT, TITLE);
   SetTargetFPS(FPS);
 
   // create simulation
-  const size_t boid_count = 10000;
   simulation_t sim = {0};
-  simulation_init(&sim, WIDTH, HEIGHT, boid_count);
+  simulation_init(&sim, WIDTH, HEIGHT, BOID_COUNT);
 
   // run simulation
   while (!WindowShouldClose()) {
@@ -104,7 +106,7 @@ int main(int argc, char *argv[]) {
     // if user pressed r, reload the simulation
     if (IsKeyPressed(KEY_R)) {
       simulation_free(&sim);
-      simulation_init(&sim, WIDTH, HEIGHT, boid_count);
+      simulation_init(&sim, WIDTH, HEIGHT, BOID_COUNT);
     }
     // advance the simulation
     simulation_tick(&sim, (float) dt);
