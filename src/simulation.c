@@ -18,11 +18,10 @@ typedef struct boid_update {
 /// A unit of work to perform on another thread; pretty much a request to update
 /// sim->boids_swap[start..end] given the state of qtree
 typedef struct {
-  // TODO: probably shouldnt be storing the whole sim, since we read/write from
-  // different parts of it...
-  simulation_t *sim;
+  boid_t *buffer; // READ ONLY
   size_t start;
   size_t end;
+  boid_t *swap; // WRITE ONLY (only between start..end)
   float dt;
   qtree_t *qtree;
 } boid_chunk_task_t;
@@ -113,7 +112,8 @@ static void update_boids(simulation_t *sim, float dt) {
       end += 1;
     }
 
-    tasks[i].sim = sim;
+    tasks[i].buffer = sim->boids;
+    tasks[i].swap = sim->boids_swap;
     tasks[i].start = start;
     tasks[i].end = end;
     tasks[i].dt = dt;
@@ -264,13 +264,14 @@ static bool boid_in_range(void *ele, rect_t range) {
 static void chunk_boid_update(void *arg) {
   assert(arg != NULL);
   boid_chunk_task_t *task = (boid_chunk_task_t *)arg;
-  simulation_t *sim = task->sim;
+  boid_t *buffer = task->buffer;
+  boid_t *swap = task->swap;
   size_t start = task->start;
   size_t end = task->end;
   qtree_t *qtree = task->qtree;
   float dt = task->dt;
 
   for (size_t i = start; i < end; ++i) {
-    update_boid_into_swap(&sim->boids_swap[i], sim->boids[i], qtree, dt);
+    update_boid_into_swap(&swap[i], buffer[i], qtree, dt);
   }
 }
