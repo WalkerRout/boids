@@ -59,7 +59,7 @@ void *arena_alloc(arena_t *arena, size_t size_bytes) {
 
   void *p = arena->end->data + arena->end->offset;
   arena->end->offset += size;
-  return memset(p, 0, size);
+  return memset(p, 0xa4, size*sizeof(uintptr_t));
 }
 
 void arena_clear(arena_t *arena) {
