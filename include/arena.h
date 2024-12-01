@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define REGION_DEFAULT_CAPACITY (2048) // word count, (*8) to get byte count
+#define REGION_DEFAULT_CAPACITY (4096) // word count, (*8) to get byte count
 
 /// A region of memory
 typedef struct region {

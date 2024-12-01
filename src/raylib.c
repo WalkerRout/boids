@@ -21,7 +21,6 @@
 
 #define BOID_WIDTH (3.0)
 #define BOID_HEIGHT (6.0)
-#define BOID_STILL_RADIUS (3.0) // when boid has no velocity, draw as circle
 
 #define BOID_COUNT (10000)
 #define BOID_COLOUR (RED)
@@ -31,7 +30,7 @@
 void draw_boid(boid_t boid) {
   float vlen = v2f_len(boid.velocity);
   if (vlen == 0.0) {
-    DrawCircle(boid.position.x, boid.position.y, BOID_STILL_RADIUS, BOID_COLOUR);
+    // this boid is invalid (super rare), just skip it for now...
     return;
   }
 
