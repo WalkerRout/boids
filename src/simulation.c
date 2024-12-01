@@ -62,8 +62,8 @@ void simulation_init(simulation_t *sim, float width, float height, size_t boids_
   sim->height = height;
 
   sim->boids_len = boids_len;
-  sim->boids = calloc(sizeof(boid_t), boids_len);
-  sim->boids_swap = calloc(sizeof(boid_t), boids_len);
+  sim->boids = calloc(boids_len, sizeof(boid_t));
+  sim->boids_swap = calloc(boids_len, sizeof(boid_t));
 
   for (size_t i = 0; i < boids_len; ++i) {
     sim->boids[i].position.x = width*randf();

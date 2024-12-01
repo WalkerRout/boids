@@ -72,8 +72,7 @@ void **qtree_query(qtree_t *qtree, rect_t query_range, size_t *out_count) {
   assert(qtree != NULL);
 
   size_t found_capacity = 16;
-  // void **found = arena_alloc(arena, found_capacity*sizeof(void *));
-  void **found = calloc(sizeof(void *), found_capacity);
+  void **found = calloc(found_capacity, sizeof(void *));
   assert(found != NULL);
   *out_count = 0;
 

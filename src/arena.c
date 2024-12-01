@@ -71,7 +71,7 @@ void arena_clear(arena_t *arena) {
 
 static region_t *new_region(size_t capacity) {
   size_t bytes = sizeof(region_t) + capacity*sizeof(uintptr_t);
-  region_t *region = calloc(bytes, 1);
+  region_t *region = calloc(1, bytes);
   assert(region != NULL);
   region->next = NULL;
   region->capacity = capacity;
